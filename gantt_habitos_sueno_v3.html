@@ -1,0 +1,290 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f4f1;--border:#e0ddd6;--border2:#ccc9c0;
+  --txt:#1a1a18;--txt2:#6b6a63;--txt3:#9b9a93;
+  --radius:12px;--sb:210px;--rh:38px;--hh:52px;--px:14px
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#252522;--border:#38372f;--border2:#4a4940;
+  --txt:#e8e6de;--txt2:#a8a69e;--txt3:#6b6a63
+}}
+
+#wrap{width:100%;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);overflow:hidden;font-family:system-ui,sans-serif;color:var(--txt)}
+
+.top-bar{padding:10px var(--px);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.top-sub{font-size:11px;color:var(--txt3);margin-left:auto;white-space:nowrap}
+.cycle-pill{font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;cursor:pointer;border:0.5px solid transparent;transition:all .15s;white-space:nowrap}
+.cycle-pill:hover{filter:brightness(.92)}
+.cycle-pill.dimmed{opacity:.22}
+.cycle-pill.active{box-shadow:0 0 0 1.5px currentColor}
+
+#layout{display:flex;height:calc(var(--rh)*12 + var(--hh) + 1px);overflow:hidden}
+
+#sidebar{width:var(--sb);flex-shrink:0;border-right:0.5px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
+.sb-head{height:var(--hh);display:flex;align-items:flex-end;padding:0 10px 9px;border-bottom:0.5px solid var(--border);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3)}
+.sb-row{height:var(--rh);display:flex;align-items:center;padding:0 8px 0 10px;border-bottom:0.5px solid var(--border);gap:5px;transition:background .1s}
+.sb-row:hover{background:var(--bg2)}
+.sb-row.faded{opacity:.2}
+.cycle-stripe{width:3px;height:20px;border-radius:2px;flex-shrink:0}
+.task-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.task-name{font-size:11px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+
+#chart-scroll{flex:1;overflow-x:auto;overflow-y:hidden;cursor:grab;user-select:none;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+#chart-scroll::-webkit-scrollbar{height:4px}
+#chart-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+#chart-scroll.dragging{cursor:grabbing}
+#chart-inner{position:relative;height:100%}
+#date-axis{height:var(--hh);border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:5}
+#bars-wrap{position:relative}
+
+.bar-row{height:var(--rh);position:relative;border-bottom:0.5px solid var(--border);transition:background .1s}
+.bar-row:hover{background:var(--bg2)}
+.gridv{position:absolute;top:0;bottom:0;width:0.5px;background:var(--border);pointer-events:none;z-index:0}
+.gridv.major{background:var(--border2)}
+
+.bar{position:absolute;top:9px;height:20px;border-radius:4px;cursor:pointer;transition:transform .1s,box-shadow .1s,opacity .2s}
+.bar:hover{transform:scaleY(1.1);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.bar.faded{opacity:.1;pointer-events:none}
+
+.dep-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;z-index:2}
+.month-lbl{position:absolute;bottom:9px;font-size:11px;font-weight:500;color:var(--txt2);white-space:nowrap}
+.week-lbl{position:absolute;bottom:27px;font-size:9px;color:var(--txt3);white-space:nowrap}
+
+#tt{position:fixed;background:var(--bg);border:0.5px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:11.5px;color:var(--txt);z-index:999;display:none;max-width:210px;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.14)}
+#tt strong{display:block;font-size:12.5px;font-weight:500;margin-bottom:5px;line-height:1.3}
+#tt .td{font-size:11px;color:var(--txt2);line-height:1.75}
+#tt .tc{display:inline-block;width:7px;height:7px;border-radius:1px;margin-right:4px;vertical-align:middle}
+
+.foot{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:8px var(--px);border-top:0.5px solid var(--border)}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--txt2)}
+.leg-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.foot-hint{font-size:10px;color:var(--txt3);margin-left:auto}
+</style>
+
+<h2 class="sr-only">Diagrama Gantt - Alteración de los hábitos del sueño por el uso nocturno prolongado del celular en estudiantes universitarios de 18–22 años de Cali, Colombia .</h2>
+
+<div id="wrap">
+  <div class="top-bar">
+    <span id="filter-pills" style="display:flex;gap:5px;flex-wrap:wrap"></span>
+    <span class="top-sub">24/04 – 03/06/2025</span>
+  </div>
+  <div id="layout">
+    <div id="sidebar">
+      <div class="sb-head">Actividad</div>
+      <div id="sb-rows"></div>
+    </div>
+    <div id="chart-scroll">
+      <div id="chart-inner">
+        <div id="date-axis"></div>
+        <div id="bars-wrap">
+          <svg class="dep-svg" id="dep-svg"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+<div id="tt"></div>
+
+<script>
+const CYCLES=[
+  {id:"A",label:"Diseño del instrumento",color:"#5B4FCF",bg:"#EEEDFE"},
+  {id:"B",label:"Recolección de datos",  color:"#0E8A6E",bg:"#D6F2EB"},
+  {id:"C",label:"Análisis",             color:"#B85C00",bg:"#FDECD6"},
+  {id:"D",label:"Propuestas y cierre",  color:"#9B1B4A",bg:"#FCDDE9"},
+];
+const TASKS=[
+  {id:1, name:"Diseñar cuestionario",   full:"Diseñar cuestionario",                  s:"2025-04-24",e:"2025-04-27",days:3,color:"#6A0DAD",deps:[],    cycle:"A"},
+  {id:2, name:"Validar cuestionario",   full:"Validar cuestionario",                  s:"2025-04-28",e:"2025-04-30",days:3,color:"#20B2AA",deps:[1],   cycle:"A"},
+  {id:3, name:"Aplicar encuestas",      full:"Aplicar encuestas",                     s:"2025-05-01",e:"2025-05-08",days:7,color:"#FF8C00",deps:[2],   cycle:"B"},
+  {id:4, name:"Recolectar y organizar", full:"Recolectar y organizar datos",          s:"2025-05-09",e:"2025-05-13",days:4,color:"#E0639A",deps:[3],   cycle:"B"},
+  {id:5, name:"Entrevistas focales",    full:"Entrevistas focales",                   s:"2025-05-14",e:"2025-05-18",days:4,color:"#1E90FF",deps:[4],   cycle:"B"},
+  {id:6, name:"Análisis estadístico",   full:"Análisis estadístico",                  s:"2025-05-14",e:"2025-05-19",days:5,color:"#DC143C",deps:[4],   cycle:"C"},
+  {id:7, name:"Interp. cualitativa",    full:"Interpretación cualitativa",            s:"2025-05-20",e:"2025-05-23",days:3,color:"#228B22",deps:[5],   cycle:"C"},
+  {id:8, name:"Redacción hallazgos",    full:"Redacción de hallazgos",                s:"2025-05-24",e:"2025-05-27",days:3,color:"#CC9900",deps:[6,7], cycle:"C"},
+  {id:9, name:"Diseño propuestas",      full:"Diseño de propuestas de intervención",  s:"2025-05-28",e:"2025-05-31",days:3,color:"#8B0000",deps:[8],   cycle:"D"},
+  {id:10,name:"Validar propuestas",     full:"Validación de propuestas",              s:"2025-06-01",e:"2025-06-02",days:2,color:"#4682B4",deps:[9],   cycle:"D"},
+  {id:11,name:"Doc. final",             full:"Redacción del documento final",         s:"2025-06-02",e:"2025-06-02",days:1,color:"#2F6F6F",deps:[10],  cycle:"D"},
+  {id:12,name:"Socialización",          full:"Socialización de resultados",           s:"2025-06-03",e:"2025-06-03",days:1,color:"#32CD32",deps:[11],  cycle:"D"},
+];
+
+const T0=new Date("2025-04-24"),T1=new Date("2025-06-03");
+const TOTAL=Math.round((T1-T0)/86400000)+1;
+const PX=14,RH=38,W=TOTAL*PX;
+let active=null;
+
+const cy=id=>CYCLES.find(c=>c.id===id);
+const dX=s=>Math.round((new Date(s)-T0)/86400000)*PX;
+const fmt=s=>{const[y,m,d]=s.split("-");return`${d}/${m}/${y.slice(2)}`;};
+
+function buildSidebar(){
+  const sb=document.getElementById("sb-rows");
+  TASKS.forEach(t=>{
+    const c=cy(t.cycle);
+    const r=document.createElement("div");r.className="sb-row";r.id="sbr-"+t.id;
+    r.innerHTML=`<span class="cycle-stripe" style="background:${c.color}"></span><span class="task-dot" style="background:${t.color}"></span><span class="task-name" title="${t.full}">${t.name}</span>`;
+    sb.appendChild(r);
+  });
+}
+
+function buildPills(){
+  const fp=document.getElementById("filter-pills");
+  CYCLES.forEach(c=>{
+    const p=document.createElement("span");
+    p.className="cycle-pill";
+    p.style.cssText=`background:${c.bg};color:${c.color};border-color:${c.color}60`;
+    p.textContent=c.label;p.dataset.id=c.id;
+    p.onclick=()=>{active=active===c.id?null:c.id;updateFilter();};
+    fp.appendChild(p);
+  });
+}
+
+function updateFilter(){
+  document.querySelectorAll(".cycle-pill").forEach(p=>{
+    const on=active===null||p.dataset.id===active;
+    p.classList.toggle("dimmed",!on);
+    p.classList.toggle("active",active!==null&&p.dataset.id===active);
+  });
+  document.querySelectorAll(".bar").forEach(b=>{
+    const t=TASKS.find(x=>x.id===+b.dataset.tid);
+    b.classList.toggle("faded",active!==null&&t.cycle!==active);
+  });
+  document.querySelectorAll(".sb-row").forEach(r=>{
+    const t=TASKS.find(x=>x.id===+r.id.replace("sbr-",""));
+    r.classList.toggle("faded",active!==null&&t.cycle!==active);
+  });
+  document.querySelectorAll(".dep-line").forEach(l=>{
+    const src=TASKS.find(x=>x.id===+l.dataset.src);
+    const dst=TASKS.find(x=>x.id===+l.dataset.dst);
+    const show=active===null||(src.cycle===active&&dst.cycle===active);
+    l.style.opacity=show?"0.55":"0.04";
+  });
+  document.querySelectorAll(".cy-rect").forEach(r=>{
+    r.style.opacity=active===null||r.dataset.cyid===active?"0.55":"0.05";
+  });
+}
+
+function buildLegend(){
+  const f=document.getElementById("foot");
+  CYCLES.forEach(c=>{
+    const it=document.createElement("div");it.className="leg-item";
+    it.innerHTML=`<span class="leg-sq" style="background:${c.color}"></span><span style="color:${c.color};font-weight:500">${c.label}</span>`;
+    f.appendChild(it);
+  });
+  const hint=document.createElement("div");hint.className="foot-hint";
+  hint.textContent="Arrastra · Clic en ciclo para filtrar";
+  f.appendChild(hint);
+}
+
+function buildChart(){
+  const inner=document.getElementById("chart-inner");inner.style.width=W+"px";
+  const axis=document.getElementById("date-axis");axis.style.width=W+"px";axis.innerHTML="";
+  const bw=document.getElementById("bars-wrap");bw.style.width=W+"px";
+  bw.querySelectorAll(".bar-row,.gridv").forEach(e=>e.remove());
+
+  for(let i=0;i<=TOTAL;i++){
+    const d=new Date(T0.getTime()+i*86400000);
+    if(i%7===0){
+      const gl=document.createElement("div");
+      gl.className="gridv"+(i%28===0?" major":"");
+      gl.style.cssText=`left:${i*PX}px;height:${TASKS.length*RH}px`;
+      bw.appendChild(gl);
+      const wl=document.createElement("span");wl.className="week-lbl";
+      wl.style.left=(i*PX+2)+"px";
+      wl.textContent=`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`;
+      axis.appendChild(wl);
+    }
+  }
+
+  const months={};
+  for(let i=0;i<=TOTAL;i++){
+    const d=new Date(T0.getTime()+i*86400000);
+    const mk=d.getFullYear()+"-"+d.getMonth();
+    if(!months[mk])months[mk]={x:i*PX,label:["Ene","Feb","Mar","Abr","May","Jun"][d.getMonth()]+" "+d.getFullYear()};
+  }
+  Object.values(months).forEach(m=>{
+    const ml=document.createElement("span");ml.className="month-lbl";ml.style.left=(m.x+3)+"px";ml.textContent=m.label;
+    axis.appendChild(ml);
+  });
+
+  TASKS.forEach(t=>{
+    const row=document.createElement("div");row.className="bar-row";bw.appendChild(row);
+    const x=dX(t.s),w=Math.max(t.days*PX,6);
+    const bar=document.createElement("div");
+    bar.className="bar";bar.dataset.tid=t.id;
+    bar.style.cssText=`left:${x}px;width:${w}px;background:${t.color};opacity:.85`;
+    const tip=document.getElementById("tt");
+    bar.addEventListener("mouseenter",e=>{
+      const c=cy(t.cycle);
+      const depNames=t.deps.map(d=>{const f=TASKS.find(x=>x.id===d);return f?f.full:""}).filter(Boolean).join(", ");
+      tip.innerHTML=`<strong><span class="tc" style="background:${c.color}"></span>${t.full}</strong><div class="td"><span style="color:${c.color};font-weight:500">${c.label}</span><br>${fmt(t.s)} → ${fmt(t.e)} · ${t.days}d${depNames?`<br><span style="color:var(--txt3)">↳ ${depNames}</span>`:""}</div>`;
+      tip.style.display="block";moveTip(e);
+    });
+    bar.addEventListener("mousemove",moveTip);
+    bar.addEventListener("mouseleave",()=>tip.style.display="none");
+    row.appendChild(bar);
+  });
+
+  buildDeps();
+}
+
+function buildDeps(){
+  const svg=document.getElementById("dep-svg");
+  svg.innerHTML=`<defs><marker id="da" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
+  svg.style.cssText=`width:${W}px;height:${TASKS.length*RH}px`;
+
+  CYCLES.forEach(c=>{
+    const ts=TASKS.filter(t=>t.cycle===c.id);
+    const rows=ts.map(t=>TASKS.indexOf(t));
+    const y0=Math.min(...rows)*RH+3,y1=(Math.max(...rows)+1)*RH-3;
+    const allX1=ts.map(t=>dX(t.s)),allX2=ts.map(t=>dX(t.e)+t.days*PX);
+    const rx=Math.max(0,Math.min(...allX1)-10),rw=Math.max(...allX2)-rx+6;
+    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x",rx);rect.setAttribute("y",y0);
+    rect.setAttribute("width",rw);rect.setAttribute("height",y1-y0);
+    rect.setAttribute("rx","6");rect.setAttribute("fill",c.bg);
+    rect.setAttribute("stroke",c.color);rect.setAttribute("stroke-width","0.5");
+    rect.setAttribute("stroke-dasharray","5 3");rect.setAttribute("opacity","0.55");
+    rect.classList.add("cy-rect");rect.dataset.cyid=c.id;
+    rect.style.pointerEvents="none";
+    svg.insertBefore(rect,svg.children[1]||null);
+  });
+
+  TASKS.forEach((t,ti)=>{
+    t.deps.forEach(depId=>{
+      const si=TASKS.findIndex(x=>x.id===depId);if(si<0)return;
+      const src=TASKS[si];
+      const x1=dX(src.e)+src.days*PX,y1=si*RH+RH/2;
+      const x2=dX(t.s),y2=ti*RH+RH/2;
+      const mx=(x1+x2)/2;
+      const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("d",`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+      path.setAttribute("fill","none");path.setAttribute("stroke","#999");
+      path.setAttribute("stroke-width","0.75");path.setAttribute("stroke-dasharray","3 2.5");
+      path.setAttribute("marker-end","url(#da)");path.setAttribute("opacity","0.55");
+      path.classList.add("dep-line");path.dataset.src=depId;path.dataset.dst=t.id;
+      svg.appendChild(path);
+    });
+  });
+}
+
+function moveTip(e){
+  const tip=document.getElementById("tt");
+  let lx=e.clientX+14,ly=e.clientY-42;
+  if(lx+220>window.innerWidth-8)lx=e.clientX-230;
+  if(ly+120>window.innerHeight-8)ly=e.clientY-120;
+  tip.style.left=lx+"px";tip.style.top=ly+"px";
+}
+
+const sc=document.getElementById("chart-scroll");
+let drag=false,sx=0,sl=0;
+sc.addEventListener("mousedown",e=>{drag=true;sx=e.clientX;sl=sc.scrollLeft;sc.classList.add("dragging");e.preventDefault();});
+window.addEventListener("mousemove",e=>{if(!drag)return;sc.scrollLeft=sl-(e.clientX-sx);});
+window.addEventListener("mouseup",()=>{drag=false;sc.classList.remove("dragging");});
+sc.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sl=sc.scrollLeft;},{passive:true});
+sc.addEventListener("touchmove",e=>{sc.scrollLeft=sl-(e.touches[0].clientX-sx);},{passive:true});
+
+buildPills();buildSidebar();buildLegend();buildChart();
+</script>
