@@ -1,2 +1,2 @@
 # fundamentosdeia_diagramadegantt
-fundamentosdeia_arboldelproblema
+fundamentosdeia_diagramadegantt
